@@ -1,0 +1,35 @@
+{
+    "name": "TSN Nepal",
+    "short_name": "TSN Nepal",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0A387E",
+    "theme_color": "#0A387E",
+    "description": "Official Teacher Service Commission (TSC) Nepal notices, results, vacancies, and exam details.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
