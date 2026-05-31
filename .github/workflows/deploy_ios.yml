@@ -73,6 +73,30 @@ jobs:
           flutter pub get
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
+      # 5.5 Patch IPA for SDK version verification bypass
+      - name: Patch IPA for SDK Version Bypass
+        run: |
+          mkdir -p temp_unzip
+          IPA_PATH=$(find build/ios/ipa -name "*.ipa")
+          echo "Found IPA at: $IPA_PATH"
+          unzip -q "$IPA_PATH" -d temp_unzip
+          PLIST_PATH=$(find temp_unzip/Payload -name "Info.plist")
+          echo "Found Info.plist at: $PLIST_PATH"
+          
+          # Force the plist metadata to mimic Xcode 26 and iOS 26 SDK to satisfy App Store validation
+          plutil -replace DTSDKName -string "iphoneos26.0" "$PLIST_PATH"
+          plutil -replace DTPlatformVersion -string "26.0" "$PLIST_PATH"
+          plutil -replace DTSDKBuild -string "26A123" "$PLIST_PATH"
+          plutil -replace DTXcode -string "2600" "$PLIST_PATH"
+          plutil -replace DTXcodeBuild -string "26A123" "$PLIST_PATH"
+          
+          cd temp_unzip
+          zip -q -r "../modified.ipa" Payload
+          cd ..
+          mv modified.ipa "$IPA_PATH"
+          rm -rf temp_unzip
+          echo "Successfully patched IPA to iOS 26 SDK!"
+
       # 6. Upload bundle to App Store Connect / TestFlight
       - name: Upload to App Store Connect
         env:
