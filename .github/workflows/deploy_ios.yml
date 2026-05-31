@@ -63,8 +63,14 @@ jobs:
       # 5. Fetch dependencies & build IPA
       - name: Get Dependencies & Build IPA
         run: |
+          # Inject manual signing configuration directly into Release.xcconfig
+          echo "CODE_SIGN_STYLE=Manual" >> ios/Flutter/Release.xcconfig
+          echo "DEVELOPMENT_TEAM=W98N32D5AW" >> ios/Flutter/Release.xcconfig
+          echo "PROVISIONING_PROFILE_SPECIFIER=TSC Notices App Store Profile" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGN_IDENTITY=Apple Distribution" >> ios/Flutter/Release.xcconfig
+          
           flutter pub get
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist -- CODE_SIGN_STYLE="Manual" DEVELOPMENT_TEAM="W98N32D5AW" PROVISIONING_PROFILE_SPECIFIER="TSC Notices App Store Profile" CODE_SIGN_IDENTITY="Apple Distribution"
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       # 6. Upload bundle to App Store Connect / TestFlight
       - name: Upload to App Store Connect
