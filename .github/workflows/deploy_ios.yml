@@ -80,7 +80,7 @@ jobs:
           IPA_PATH=$(find build/ios/ipa -name "*.ipa")
           echo "Found IPA at: $IPA_PATH"
           unzip -q "$IPA_PATH" -d temp_unzip
-          PLIST_PATH=$(find temp_unzip/Payload -name "Info.plist")
+          PLIST_PATH="temp_unzip/Payload/Runner.app/Info.plist"
           echo "Found Info.plist at: $PLIST_PATH"
           
           # Force the plist metadata to mimic Xcode 26 and iOS 26 SDK to satisfy App Store validation
