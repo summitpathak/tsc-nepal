@@ -67,6 +67,8 @@ jobs:
           echo "CODE_SIGN_STYLE=Manual" >> ios/Flutter/Release.xcconfig
           echo "DEVELOPMENT_TEAM=W98N32D5AW" >> ios/Flutter/Release.xcconfig
           echo "PROVISIONING_PROFILE_SPECIFIER=TSC Notices App Store Profile" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGN_IDENTITY=iPhone Distribution" >> ios/Flutter/Release.xcconfig
+          echo 'CODE_SIGN_IDENTITY[sdk=iphoneos*]=iPhone Distribution' >> ios/Flutter/Release.xcconfig
           
           flutter pub get
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
