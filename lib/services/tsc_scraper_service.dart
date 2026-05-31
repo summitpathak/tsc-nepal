@@ -12,7 +12,7 @@ class TscScraperService {
     final categoryId = category.categoryId;
     var url = category == NoticeCategory.examCenter
         ? '$baseUrl/category/examination-center/'
-        : '$baseUrl/category/$categoryId';
+        : '$baseUrl/category/$categoryId/';
 
     if (page > 1) {
       url = '$url?page=$page';
@@ -27,52 +27,95 @@ class TscScraperService {
         final document = html_parser.parse(response.body);
         final List<NoticeItem> list = [];
 
-        // Select all cards representing notice list items
-        final cards = document.querySelectorAll('.grid__card');
+        // Standardized Nepal GIWMS layouts render lists inside a table wrapper
+        final rows = document.querySelectorAll('.org-table-wrapper table.table tbody tr');
 
-        for (var card in cards) {
-          try {
-            // Extract Title
-            final titleElement = card.querySelector('.card__title a');
-            final title = titleElement?.text.trim() ?? '';
-            if (title.isEmpty) continue;
+        if (rows.isNotEmpty) {
+          for (var row in rows) {
+            try {
+              final cells = row.querySelectorAll('td');
+              if (cells.length < 5) continue;
 
-            // Extract Detail URL
-            var detailUrl = titleElement?.attributes['href']?.trim() ?? '';
-            // Standardize url
-            if (!detailUrl.startsWith('/')) {
-              detailUrl = '/$detailUrl';
+              // Title is inside the 2nd cell
+              final title = cells[1].text.trim();
+              if (title.isEmpty) continue;
+
+              // Date is inside the 3rd cell
+              var date = cells[2].text.trim();
+              date = date.replaceAll(RegExp(r'\s+'), ' ');
+
+              // Detail URL is inside the 5th cell action anchor
+              final detailLink = cells[4].querySelector('a');
+              var detailUrl = detailLink?.attributes['href']?.trim() ?? '';
+              if (detailUrl.isEmpty) continue;
+              if (!detailUrl.startsWith('/')) {
+                detailUrl = '/$detailUrl';
+              }
+
+              // PDF URL is inside the 4th cell document anchor (if available directly)
+              final pdfLink = cells[3].querySelector('a');
+              var pdfUrl = pdfLink?.attributes['href']?.trim();
+              if (pdfUrl != null && pdfUrl.startsWith('/')) {
+                pdfUrl = '$baseUrl$pdfUrl';
+              }
+
+              final imageUrl = 'https://giwmscdnone.gov.np/static/assets/image/Emblem_of_Nepal.png';
+              final id = detailUrl.split('/').where((s) => s.isNotEmpty).last;
+
+              list.add(NoticeItem(
+                id: id,
+                title: title,
+                detailUrl: detailUrl,
+                date: date,
+                imageUrl: imageUrl,
+                category: category,
+                pdfUrl: pdfUrl,
+              ));
+            } catch (e) {
+              print('Error parsing notice table row: $e');
             }
+          }
+        } else {
+          // Fallback to related/recent notices grid card layout
+          final cards = document.querySelectorAll('.grid__card');
 
-            // Extract Date
-            final dateElement = card.querySelector('.post__date p');
-            // Clean up date string (remove icon and white spaces)
-            var date = dateElement?.text.trim() ?? '';
-            date = date.replaceAll(RegExp(r'\s+'), ' ');
+          for (var card in cards) {
+            try {
+              final titleElement = card.querySelector('.card__title a');
+              final title = titleElement?.text.trim() ?? '';
+              if (title.isEmpty) continue;
 
-            // Extract Image URL
-            final imgElement = card.querySelector('.card__img img');
-            var imageUrl = imgElement?.attributes['src']?.trim() ?? '';
-            if (imageUrl.startsWith('/')) {
-              imageUrl = '$baseUrl$imageUrl';
+              var detailUrl = titleElement?.attributes['href']?.trim() ?? '';
+              if (!detailUrl.startsWith('/')) {
+                detailUrl = '/$detailUrl';
+              }
+
+              final dateElement = card.querySelector('.post__date p');
+              var date = dateElement?.text.trim() ?? '';
+              date = date.replaceAll(RegExp(r'\s+'), ' ');
+
+              final imgElement = card.querySelector('.card__img img');
+              var imageUrl = imgElement?.attributes['src']?.trim() ?? '';
+              if (imageUrl.startsWith('/')) {
+                imageUrl = '$baseUrl$imageUrl';
+              }
+              if (imageUrl.isEmpty) {
+                imageUrl = 'https://giwmscdnone.gov.np/static/assets/image/Emblem_of_Nepal.png';
+              }
+
+              final id = detailUrl.split('/').where((s) => s.isNotEmpty).last;
+
+              list.add(NoticeItem(
+                id: id,
+                title: title,
+                detailUrl: detailUrl,
+                date: date,
+                imageUrl: imageUrl,
+                category: category,
+              ));
+            } catch (e) {
+              print('Error parsing notice grid card fallback: $e');
             }
-            if (imageUrl.isEmpty) {
-              imageUrl = 'https://giwmscdnone.gov.np/static/assets/image/newlogo.png';
-            }
-
-            // Generate unique ID based on detailUrl slug
-            final id = detailUrl.split('/').where((s) => s.isNotEmpty).last;
-
-            list.add(NoticeItem(
-              id: id,
-              title: title,
-              detailUrl: detailUrl,
-              date: date,
-              imageUrl: imageUrl,
-              category: category,
-            ));
-          } catch (e) {
-            print('Error parsing single notice card: $e');
           }
         }
 
