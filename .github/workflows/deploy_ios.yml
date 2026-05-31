@@ -76,17 +76,12 @@ jobs:
       # 6. Upload bundle to App Store Connect / TestFlight
       - name: Upload to App Store Connect
         env:
-          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
-          API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APPLE_USERNAME: ${{ secrets.APPLE_ID_USER }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
         run: |
-          # Setup API Key file in ~/private_keys (required by xcrun tool chain)
-          mkdir -p ~/private_keys
-          echo -n "$API_KEY_BASE64" | base64 --decode -o ~/private_keys/AuthKey_$API_KEY_ID.p8
-          
-          # Upload IPA using xcrun altool
+          # Upload IPA using xcrun altool with Apple ID and App-Specific Password
           xcrun altool --upload-app \
             --type ios \
             --file build/ios/ipa/*.ipa \
-            --apiKey "$API_KEY_ID" \
-            --apiIssuer "$API_ISSUER_ID"
+            --username "$APPLE_USERNAME" \
+            --password "$APPLE_PASSWORD"
