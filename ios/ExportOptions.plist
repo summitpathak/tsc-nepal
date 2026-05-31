@@ -11,11 +11,11 @@
 	<key>stripSwiftSymbols</key>
 	<true/>
 	<key>teamID</key>
-	<string>YOUR_10_DIGIT_TEAM_ID</string>
+	<string>W98N32D5AW</string>
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>com.summitpathak.tscnotices</key>
-		<string>YOUR_PROVISIONING_PROFILE_UUID_OR_NAME</string>
+		<string>TSC Notices App Store Profile</string>
 	</dict>
 </dict>
 </plist>
