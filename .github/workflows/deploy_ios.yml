@@ -8,12 +8,18 @@ on:
 jobs:
   deploy:
     name: Build & Upload iOS App
-    runs-on: macos-15
+    runs-on: macos-26
     
     steps:
       # 1. Check out repository code
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      # 1.5 Select Unified Xcode 26.x
+      - name: Select Xcode 26
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.5.app || sudo xcode-select -s /Applications/Xcode_26.0.app || sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
 
       # 2. Setup Java environment
       - name: Setup Java
@@ -60,7 +66,7 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
           
-      # 5. Fetch dependencies & build IPA
+      # 5. Fetch dependencies & build IPA natively using iOS 26 SDK
       - name: Get Dependencies & Build IPA
         run: |
           # Inject manual signing configuration directly into Release.xcconfig
@@ -72,51 +78,6 @@ jobs:
           
           flutter pub get
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
-
-      # 5.5 Patch IPA for SDK version verification bypass
-      - name: Patch IPA for SDK Version Bypass
-        run: |
-          mkdir -p temp_unzip
-          IPA_PATH=$(find build/ios/ipa -name "*.ipa")
-          echo "Found IPA at: $IPA_PATH"
-          unzip -q "$IPA_PATH" -d temp_unzip
-          
-          # 1. Extract entitlements from the original signed app bundle
-          codesign -d --entitlements :temp_unzip/entitlements.plist temp_unzip/Payload/Runner.app
-          echo "Extracted entitlements:"
-          cat temp_unzip/entitlements.plist
-          
-          # 2. Patch all Info.plist files inside the main bundle and frameworks to satisfy App Store validation
-          find temp_unzip/Payload/Runner.app -name "Info.plist" | while read -r PLIST_PATH; do
-            echo "Patching SDK version in: $PLIST_PATH"
-            plutil -replace DTSDKName -string "iphoneos26.0" "$PLIST_PATH" || true
-            plutil -replace DTPlatformVersion -string "26.0" "$PLIST_PATH" || true
-            plutil -replace DTSDKBuild -string "26A123" "$PLIST_PATH" || true
-            plutil -replace DTXcode -string "2600" "$PLIST_PATH" || true
-            plutil -replace DTXcodeBuild -string "26A123" "$PLIST_PATH" || true
-          done
-          
-          # 3. Unlock the temporary keychain to authorize codesign to access the certificate without interactive prompts
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          KEYCHAIN_PASSWORD="temp_keychain_password_${{ github.run_id }}"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          
-          # 4. Cryptographically re-sign all nested frameworks and dynamic libraries
-          find temp_unzip/Payload/Runner.app -depth \( -name "*.framework" -o -name "*.dylib" \) | while read -r NESTED_COMPONENT; do
-            echo "Re-signing nested component: $NESTED_COMPONENT"
-            codesign --force --sign "iPhone Distribution: Summit Pathak (W98N32D5AW)" --timestamp=none "$NESTED_COMPONENT"
-          done
-          
-          # 5. Cryptographically re-sign the modified Runner.app bundle using Apple Distribution certificate and extracted entitlements
-          echo "Re-signing the main app bundle with entitlements..."
-          codesign --force --sign "iPhone Distribution: Summit Pathak (W98N32D5AW)" --entitlements temp_unzip/entitlements.plist --timestamp=none temp_unzip/Payload/Runner.app
-          
-          cd temp_unzip
-          zip -q -r "../modified.ipa" Payload
-          cd ..
-          mv modified.ipa "$IPA_PATH"
-          rm -rf temp_unzip
-          echo "Successfully patched and recursively re-signed IPA to iOS 26 SDK!"
 
       # 6. Upload bundle to App Store Connect / TestFlight
       - name: Upload to App Store Connect
