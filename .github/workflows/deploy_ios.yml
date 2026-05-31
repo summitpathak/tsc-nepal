@@ -90,12 +90,21 @@ jobs:
           plutil -replace DTXcode -string "2600" "$PLIST_PATH"
           plutil -replace DTXcodeBuild -string "26A123" "$PLIST_PATH"
           
+          # Unlock the temporary keychain to authorize codesign to access the certificate without interactive prompts
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD="temp_keychain_password_${{ github.run_id }}"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # Cryptographically re-sign the modified Runner.app bundle using your Apple Distribution certificate
+          echo "Re-signing the app bundle..."
+          codesign --force --sign "iPhone Distribution: Summit Pathak (W98N32D5AW)" --timestamp=none temp_unzip/Payload/Runner.app
+          
           cd temp_unzip
           zip -q -r "../modified.ipa" Payload
           cd ..
           mv modified.ipa "$IPA_PATH"
           rm -rf temp_unzip
-          echo "Successfully patched IPA to iOS 26 SDK!"
+          echo "Successfully patched and re-signed IPA to iOS 26 SDK!"
 
       # 6. Upload bundle to App Store Connect / TestFlight
       - name: Upload to App Store Connect
