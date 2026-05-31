@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     name: Build & Upload iOS App
-    runs-on: macos-13
+    runs-on: macos-14
     
     steps:
       # 1. Check out repository code
