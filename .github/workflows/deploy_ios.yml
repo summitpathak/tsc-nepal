@@ -64,7 +64,7 @@ jobs:
       - name: Get Dependencies & Build IPA
         run: |
           flutter pub get
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist -- CODE_SIGN_STYLE="Manual" DEVELOPMENT_TEAM="W98N32D5AW" PROVISIONING_PROFILE_SPECIFIER="TSC Notices App Store Profile" CODE_SIGN_IDENTITY="Apple Distribution"
 
       # 6. Upload bundle to App Store Connect / TestFlight
       - name: Upload to App Store Connect
