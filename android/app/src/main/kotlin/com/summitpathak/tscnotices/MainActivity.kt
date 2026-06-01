@@ -1,4 +1,4 @@
-package com.example.tsc_notices
+package com.summitpathak.tscnotices
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,0 +1,62 @@
+name: Build & Release Android App
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger only on version tags, e.g., v1.0.0
+
+jobs:
+  build:
+    name: Build Android App Bundle (AAB)
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Setup Java environment
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # 3. Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.27.4'
+          cache: true
+
+      # 4. Build and Sign Android App Bundle
+      - name: Build Android App Bundle (AAB)
+        env:
+          PLAY_STORE_KEYSTORE_BASE64: ${{ secrets.PLAY_STORE_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$PLAY_STORE_KEYSTORE_BASE64" ]; then
+            echo "Decoding release keystore..."
+            KEYSTORE_PATH=$RUNNER_TEMP/release.keystore
+            echo -n "$PLAY_STORE_KEYSTORE_BASE64" | base64 --decode -o $KEYSTORE_PATH
+            export ANDROID_KEYSTORE_PATH=$KEYSTORE_PATH
+            
+            flutter pub get
+            flutter build appbundle --release
+          else
+            echo "No production keystore secrets found on GitHub. Building bundle using fallback..."
+            flutter pub get
+            flutter build appbundle --release
+          fi
+
+      # 5. Upload AAB as Downloadable Release Artifact
+      - name: Upload Android App Bundle Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tsc-nepal-android-bundle
+          path: build/app/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 7
