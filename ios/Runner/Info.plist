@@ -49,5 +49,7 @@
 	<string>ca-app-pub-6359384135172214~4717723791</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>यो पहिचानकर्ता तपाईंको रुचि अनुसारका विज्ञापनहरू देखाउन र उत्कृष्ट अनुभव प्रदान गर्न प्रयोग गरिनेछ। (This identifier will be used to show ads based on your interests and deliver a personalized experience.)</string>
 </dict>
 </plist>

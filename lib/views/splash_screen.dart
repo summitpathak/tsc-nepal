@@ -1,3 +1,5 @@
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'main_screen.dart';
@@ -32,8 +34,19 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _controller.forward();
 
-    // Navigate to MainScreen after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
+    // Navigate to MainScreen after 3 seconds, requesting ATT on iOS
+    Future.delayed(const Duration(seconds: 3), () async {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        try {
+          final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+          if (status == TrackingStatus.notDetermined) {
+            await AppTrackingTransparency.requestTrackingAuthorization();
+          }
+        } catch (e) {
+          debugPrint("App Tracking Transparency Error: $e");
+        }
+      }
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(

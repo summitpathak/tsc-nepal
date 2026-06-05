@@ -2,7 +2,7 @@ name: tsc_notices
 description: "A premium Flutter mobile application to fetch, cache, search, and view notices, results, vacancies, and exam center details from TSC Nepal."
 publish_to: 'none'
 
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -27,6 +27,9 @@ dependencies:
 
   # Icons
   cupertino_icons: ^1.0.6
+
+  # Tracking & Compliance
+  app_tracking_transparency: ^2.0.6
 
 dev_dependencies:
   flutter_test:

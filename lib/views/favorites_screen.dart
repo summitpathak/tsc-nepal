@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/notice_provider.dart';
 import 'widgets/notice_card.dart';
+import 'widgets/banner_ad_widget.dart';
 import 'detail_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -175,6 +176,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     ),
             ),
           ),
+          const BannerAdWidget(),
         ],
       ),
     );
